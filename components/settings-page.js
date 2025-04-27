@@ -6,6 +6,7 @@ class SettingsPage extends HTMLElement {
   constructor() {
     super();
     this.products = [];
+    this.filteredProducts = [];
     this.calorieGoal = null;
     this.goalHistory = [];
     this.loading = true;
@@ -15,10 +16,12 @@ class SettingsPage extends HTMLElement {
     this.goalValue = '';
     this.productToDelete = null;
     this.showDeleteModal = false;
+    this.searchQuery = '';
 
     // Зв'язуємо методи для використання як колбеки
     this.handleProductFormSubmit = this.handleProductFormSubmit.bind(this);
     this.handleAddProduct = this.handleAddProduct.bind(this);
+    this.handleProductSearch = this.handleProductSearch.bind(this);
   }
 
   static get observedAttributes() {
@@ -34,6 +37,7 @@ class SettingsPage extends HTMLElement {
   disconnectedCallback() {
     // Видаляємо обробник події form-submit при видаленні компонента з DOM
     this.removeEventListener('product-form-submit', this.handleProductFormSubmit);
+    this.removeEventListener('product-search', this.handleProductSearch);
   }
 
   attributeChangedCallback() {
@@ -73,6 +77,7 @@ class SettingsPage extends HTMLElement {
       ]);
 
       this.products = products;
+      this.filteredProducts = products;
 
       if (goalData.history.length > 0) {
         this.calorieGoal = goalData.current;
@@ -87,6 +92,59 @@ class SettingsPage extends HTMLElement {
     }
   }
 
+  handleProductSearch(e) {
+    const { searchValue } = e.detail;
+    this.searchQuery = searchValue;
+    this.filterProducts();
+    // Не перемальовуємо весь компонент
+    // Оновлення списку продуктів відбувається в методі filterProducts
+  }
+
+  filterProducts() {
+    if (!this.searchQuery) {
+      this.filteredProducts = [...this.products];
+      return;
+    }
+
+    const query = this.searchQuery.toLowerCase();
+    this.filteredProducts = this.products.filter(product =>
+      product.name.toLowerCase().includes(query) ||
+      product.caloriesPer100g.toString().includes(query)
+    );
+
+    // Оновлюємо тільки список продуктів, а не весь компонент
+    this.updateProductsList();
+  }
+
+  updateProductsList() {
+    const productsContainer = this.querySelector('.products-list-container');
+    if (productsContainer) {
+      productsContainer.innerHTML = this.filteredProducts.length > 0
+        ? this.filteredProducts.map(product => this.renderProductItem(product)).join('')
+        : this.searchQuery
+          ? '<div class="text-center text-gray-500 py-4">Продуктів за пошуком не знайдено</div>'
+          : '<div class="text-center text-gray-500 py-4">Немає доданих продуктів</div>';
+
+      // Налаштовуємо нові обробники подій видалення
+      this.setupDeleteListeners();
+    }
+  }
+
+  setupDeleteListeners() {
+    this.querySelectorAll('.delete-product-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const productId = e.target.closest('.product-item').dataset.id;
+        const product = this.products.find(p => p.id === productId);
+        if (product) {
+          this.productToDelete = product;
+          this.showDeleteModal = true;
+          this.render();
+          this.setupEventListeners();
+        }
+      });
+    });
+  }
+
   setupEventListeners() {
     // Перед додаванням нових обробників, видаляємо старі
     this.removeAllEventListeners();
@@ -99,6 +157,9 @@ class SettingsPage extends HTMLElement {
         this.setupEventListeners();
       });
     });
+
+    // Обробник події для пошуку продуктів
+    this.addEventListener('product-search', this.handleProductSearch);
 
     // Обробник події від add-product-form компонента
     this.addEventListener('product-form-submit', this.handleProductFormSubmit);
@@ -161,6 +222,7 @@ class SettingsPage extends HTMLElement {
   removeAllEventListeners() {
     // Видаляємо обробник події form-submit
     this.removeEventListener('product-form-submit', this.handleProductFormSubmit);
+    this.removeEventListener('product-search', this.handleProductSearch);
 
     // Тут можна додати інші специфічні обробники, які потрібно видалити
   }
@@ -223,6 +285,7 @@ class SettingsPage extends HTMLElement {
 
       await addProduct(newProduct);
       this.products.unshift(newProduct);
+      this.filterProducts();
       this.render();
       this.setupEventListeners();
     } catch (error) {
@@ -247,6 +310,7 @@ class SettingsPage extends HTMLElement {
       console.log('Спроба додати продукт з вбудованої форми:', newProduct);
       await addProduct(newProduct);
       this.products.unshift(newProduct);
+      this.filterProducts();
       this.productName = '';
       this.caloriesValue = '';
       this.render();
@@ -366,10 +430,14 @@ class SettingsPage extends HTMLElement {
           <div class="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
         </div>
         
-        <div class="space-y-2">
-          ${this.products.length > 0 ?
-        this.products.map(product => this.renderProductItem(product)).join('') :
-        '<div class="text-center text-gray-500 py-4">Немає доданих продуктів</div>'
+        <search-products value="${this.searchQuery}"></search-products>
+        
+        <div class="space-y-2 products-list-container">
+          ${this.filteredProducts.length > 0 ?
+        this.filteredProducts.map(product => this.renderProductItem(product)).join('') :
+        this.searchQuery
+          ? '<div class="text-center text-gray-500 py-4">Продуктів за пошуком не знайдено</div>'
+          : '<div class="text-center text-gray-500 py-4">Немає доданих продуктів</div>'
       }
         </div>
       </div>
@@ -471,3 +539,4 @@ customElements.define('settings-page', SettingsPage);
 
 // Import other components
 import './add-product-form.js';
+import './search-products.js';

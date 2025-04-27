@@ -5,16 +5,19 @@ class AddMealEntry extends HTMLElement {
   constructor() {
     super();
     this.products = [];
+    this.filteredProducts = [];
     this.loading = true;
     this.isOpen = false;
     this.selectedProductId = '';
     this.grams = '';
+    this.searchQuery = '';
 
     // Зв'язуємо методи для використання як колбеки
     this.handleCloseModal = this.handleCloseModal.bind(this);
     this.handleProductSelect = this.handleProductSelect.bind(this);
     this.handleGramsInput = this.handleGramsInput.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
+    this.handleProductSearch = this.handleProductSearch.bind(this);
   }
 
   connectedCallback() {
@@ -25,6 +28,7 @@ class AddMealEntry extends HTMLElement {
   disconnectedCallback() {
     // Видаляємо всі обробники подій при видаленні компонента
     this.removeEventListeners();
+    this.removeEventListener('product-search', this.handleProductSearch);
   }
 
   async loadProducts() {
@@ -38,12 +42,70 @@ class AddMealEntry extends HTMLElement {
       }
 
       this.products = await getProducts(user_id);
+      this.filteredProducts = [...this.products];
     } catch (error) {
       console.error('Error loading products:', error);
     } finally {
       this.loading = false;
       this.render();
     }
+  }
+
+  handleProductSearch(e) {
+    const { searchValue } = e.detail;
+    this.searchQuery = searchValue;
+    this.filterProducts();
+    // Оновлюємо тільки список продуктів, а не весь компонент
+    this.updateProductsList();
+  }
+
+  filterProducts() {
+    if (!this.searchQuery) {
+      this.filteredProducts = [...this.products];
+      return;
+    }
+
+    const query = this.searchQuery.toLowerCase();
+    this.filteredProducts = this.products.filter(product =>
+      product.name.toLowerCase().includes(query) ||
+      product.caloriesPer100g.toString().includes(query)
+    );
+  }
+
+  updateProductsList() {
+    const productSelectContainer = this.querySelector('.product-select-container');
+    if (productSelectContainer) {
+      productSelectContainer.innerHTML = this.renderProductSelectOptions();
+    }
+  }
+
+  renderProductSelectOptions() {
+    if (this.filteredProducts.length === 0) {
+      return `
+        <div class="p-2 bg-yellow-50 dark:bg-yellow-900/30 rounded text-yellow-700 dark:text-yellow-300 mb-4">
+          ${this.searchQuery
+          ? 'За вашим запитом продуктів не знайдено. Спробуйте змінити пошук або додайте новий продукт.'
+          : 'У вас ще немає продуктів. Додайте їх у розділі "Мої продукти".'}
+        </div>
+      `;
+    }
+
+    return `
+      <select 
+        id="product-select" 
+        class="w-full p-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+        required
+      >
+        <option value="" disabled ${!this.selectedProductId ? 'selected' : ''}>
+          Виберіть продукт
+        </option>
+        ${this.filteredProducts.map(product => `
+          <option value="${product.id}" ${this.selectedProductId === product.id ? 'selected' : ''}>
+            ${product.name} (${product.caloriesPer100g} ккал/100г)
+          </option>
+        `).join('')}
+      </select>
+    `;
   }
 
   // Метод для видалення всіх обробників подій
@@ -72,6 +134,9 @@ class AddMealEntry extends HTMLElement {
   setupEventListeners() {
     // Спочатку видаляємо всі обробники подій
     this.removeEventListeners();
+
+    // Додаємо обробник події для пошуку
+    this.addEventListener('product-search', this.handleProductSearch);
 
     // Тепер додаємо нові
     const closeBtn = this.querySelector('#close-modal');
@@ -175,6 +240,7 @@ class AddMealEntry extends HTMLElement {
       this.isOpen = false;
       this.selectedProductId = '';
       this.grams = '';
+      this.searchQuery = '';
       this.render();
     } catch (error) {
       console.error('Error adding entry:', error);
@@ -218,22 +284,13 @@ class AddMealEntry extends HTMLElement {
   renderForm() {
     return `
       <form id="add-meal-form">
+        <search-products value="${this.searchQuery}"></search-products>
+        
         <div class="mb-4">
           <label for="product-select" class="block mb-2 font-medium text-gray-700 dark:text-gray-300">Виберіть продукт</label>
-          <select 
-            id="product-select" 
-            class="w-full p-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-            required
-          >
-            <option value="" disabled ${!this.selectedProductId ? 'selected' : ''}>
-              Виберіть продукт
-            </option>
-            ${this.products.map(product => `
-              <option value="${product.id}" ${this.selectedProductId === product.id ? 'selected' : ''}>
-                ${product.name} (${product.caloriesPer100g} ккал/100г)
-              </option>
-            `).join('')}
-          </select>
+          <div class="product-select-container">
+            ${this.renderProductSelectOptions()}
+          </div>
         </div>
         
         <div class="mb-4">
@@ -251,7 +308,8 @@ class AddMealEntry extends HTMLElement {
         
         <button 
           type="submit" 
-          class="w-full py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-md font-medium"
+          class="w-full py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-md font-medium ${this.filteredProducts.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}"
+          ${this.filteredProducts.length === 0 ? 'disabled' : ''}
         >
           Додати
         </button>
@@ -261,3 +319,6 @@ class AddMealEntry extends HTMLElement {
 }
 
 customElements.define('add-meal-entry', AddMealEntry);
+
+// Import search component
+import './search-products.js';

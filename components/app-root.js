@@ -124,3 +124,4 @@ import './auth-page.js';
 import './nav-bar.js';
 import './calorie-tracker.js';
 import './settings-page.js';
+import './search-products.js';
