@@ -219,7 +219,7 @@ class CalorieTracker extends HTMLElement {
   render() {
     this.innerHTML = `
       <div class="pb-20">
-        <div class="flex justify-between items-center mb-4 p-2 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+        <div class="flex justify-between items-center mb-4 p-1 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
           <div class="flex items-center justify-center w-10 h-10 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full date-prev">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-5 h-5">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
