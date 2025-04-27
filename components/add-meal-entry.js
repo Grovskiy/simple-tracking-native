@@ -17,7 +17,7 @@ class AddMealEntry extends HTMLElement {
     this.handleProductSelect = this.handleProductSelect.bind(this);
     this.handleGramsInput = this.handleGramsInput.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
-    this.handleProductSearch = this.handleProductSearch.bind(this);
+    this.handleSearchInput = this.handleSearchInput.bind(this);
   }
 
   connectedCallback() {
@@ -28,7 +28,6 @@ class AddMealEntry extends HTMLElement {
   disconnectedCallback() {
     // Видаляємо всі обробники подій при видаленні компонента
     this.removeEventListeners();
-    this.removeEventListener('product-search', this.handleProductSearch);
   }
 
   async loadProducts() {
@@ -51,11 +50,9 @@ class AddMealEntry extends HTMLElement {
     }
   }
 
-  handleProductSearch(e) {
-    const { searchValue } = e.detail;
-    this.searchQuery = searchValue;
+  handleSearchInput(e) {
+    this.searchQuery = e.target.value;
     this.filterProducts();
-    // Оновлюємо тільки список продуктів, а не весь компонент
     this.updateProductsList();
   }
 
@@ -73,16 +70,83 @@ class AddMealEntry extends HTMLElement {
   }
 
   updateProductsList() {
-    const productSelectContainer = this.querySelector('.product-select-container');
-    if (productSelectContainer) {
-      productSelectContainer.innerHTML = this.renderProductSelectOptions();
+    const productListContainer = this.querySelector('.product-list-container');
+    if (productListContainer) {
+      productListContainer.innerHTML = this.renderProductList();
+
+      // Додаємо обробники кліків по продуктах
+      this.querySelectorAll('.product-item').forEach(item => {
+        item.addEventListener('click', () => {
+          this.selectedProductId = item.dataset.id;
+          this.updateSelectedProductIndicator();
+
+          // Фокусуємо поле для введення грамів після вибору продукту
+          const gramsInput = this.querySelector('#grams-input');
+          if (gramsInput) {
+            gramsInput.focus();
+          }
+        });
+      });
     }
   }
 
-  renderProductSelectOptions() {
+  updateSelectedProductIndicator() {
+    // Знімаємо активний клас з усіх елементів
+    this.querySelectorAll('.product-item').forEach(item => {
+      item.classList.remove('bg-primary-50', 'dark:bg-primary-900/30', 'border-primary-300', 'dark:border-primary-700');
+      item.classList.add('bg-white', 'dark:bg-gray-800', 'border-gray-200', 'dark:border-gray-700');
+    });
+
+    // Додаємо активний клас до вибраного елемента
+    const selectedItem = this.querySelector(`.product-item[data-id="${this.selectedProductId}"]`);
+    if (selectedItem) {
+      selectedItem.classList.remove('bg-white', 'dark:bg-gray-800', 'border-gray-200', 'dark:border-gray-700');
+      selectedItem.classList.add('bg-primary-50', 'dark:bg-primary-900/30', 'border-primary-300', 'dark:border-primary-700');
+    }
+
+    // Оновлюємо стан поля введення грамів
+    const gramsInput = this.querySelector('#grams-input');
+    if (gramsInput) {
+      if (this.selectedProductId) {
+        gramsInput.removeAttribute('disabled');
+      } else {
+        gramsInput.setAttribute('disabled', 'disabled');
+      }
+    }
+
+    // Оновлюємо також стан кнопки відправки форми
+    const submitButton = this.querySelector('button[type="submit"]');
+    if (submitButton) {
+      if (!this.selectedProductId || !this.grams) {
+        submitButton.classList.add('opacity-50', 'cursor-not-allowed');
+        submitButton.setAttribute('disabled', 'disabled');
+      } else {
+        submitButton.classList.remove('opacity-50', 'cursor-not-allowed');
+        submitButton.removeAttribute('disabled');
+      }
+    }
+
+    // Оновлюємо розрахунок калорій
+    this.updateCaloriesDisplay();
+  }
+
+  updateCaloriesDisplay() {
+    const selectedProduct = this.products.find(p => p.id === this.selectedProductId);
+    const caloriesLabel = this.querySelector('.calories-calculation');
+
+    if (caloriesLabel && selectedProduct && this.grams) {
+      const calculatedCalories = Math.round((selectedProduct.caloriesPer100g * parseInt(this.grams)) / 100);
+      caloriesLabel.textContent = `${calculatedCalories} ккал`;
+      caloriesLabel.classList.remove('hidden');
+    } else if (caloriesLabel) {
+      caloriesLabel.classList.add('hidden');
+    }
+  }
+
+  renderProductList() {
     if (this.filteredProducts.length === 0) {
       return `
-        <div class="p-2 bg-yellow-50 dark:bg-yellow-900/30 rounded text-yellow-700 dark:text-yellow-300 mb-4">
+        <div class="p-3 bg-yellow-50 dark:bg-yellow-900/30 rounded-md text-yellow-700 dark:text-yellow-300 mt-2">
           ${this.searchQuery
           ? 'За вашим запитом продуктів не знайдено. Спробуйте змінити пошук або додайте новий продукт.'
           : 'У вас ще немає продуктів. Додайте їх у розділі "Мої продукти".'}
@@ -90,22 +154,25 @@ class AddMealEntry extends HTMLElement {
       `;
     }
 
-    return `
-      <select 
-        id="product-select" 
-        class="w-full p-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-        required
-      >
-        <option value="" disabled ${!this.selectedProductId ? 'selected' : ''}>
-          Виберіть продукт
-        </option>
-        ${this.filteredProducts.map(product => `
-          <option value="${product.id}" ${this.selectedProductId === product.id ? 'selected' : ''}>
-            ${product.name} (${product.caloriesPer100g} ккал/100г)
-          </option>
-        `).join('')}
-      </select>
-    `;
+    return this.filteredProducts.map(product => `
+      <div class="product-item cursor-pointer flex justify-between items-center px-2 py-2 border rounded-md mb-2 
+           ${this.selectedProductId === product.id
+        ? 'bg-primary-50 dark:bg-primary-900/30 border-primary-300 dark:border-primary-700'
+        : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'}"
+           data-id="${product.id}">
+        <div class="flex justify-between items-center w-full gap-2">
+          <div class="text-overflow-ellipsis overflow-hidden truncate whitespace-nowrap font-medium">${product.name}</div>
+          <div class="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">${product.caloriesPer100g} ккал/100г</div>
+        </div>
+        ${this.selectedProductId === product.id
+        ? `<div class="text-primary-600 dark:text-primary-400">
+               <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+               </svg>
+             </div>`
+        : ''}
+      </div>
+    `).join('');
   }
 
   // Метод для видалення всіх обробників подій
@@ -115,9 +182,9 @@ class AddMealEntry extends HTMLElement {
       closeBtn.removeEventListener('click', this.handleCloseModal);
     }
 
-    const productSelect = this.querySelector('#product-select');
-    if (productSelect) {
-      productSelect.removeEventListener('change', this.handleProductSelect);
+    const searchInput = this.querySelector('#product-search');
+    if (searchInput) {
+      searchInput.removeEventListener('input', this.handleSearchInput);
     }
 
     const gramsInput = this.querySelector('#grams-input');
@@ -129,28 +196,52 @@ class AddMealEntry extends HTMLElement {
     if (form) {
       form.removeEventListener('submit', this.handleSubmit);
     }
+
+    // Видаляємо обробники кліків з елементів списку
+    this.querySelectorAll('.product-item').forEach(item => {
+      const id = item.dataset.id;
+      const boundHandler = this._clickHandlers?.[id];
+      if (boundHandler) {
+        item.removeEventListener('click', boundHandler);
+      }
+    });
   }
 
   setupEventListeners() {
     // Спочатку видаляємо всі обробники подій
     this.removeEventListeners();
 
-    // Додаємо обробник події для пошуку
-    this.addEventListener('product-search', this.handleProductSearch);
-
-    // Тепер додаємо нові
+    // Додаємо обробники для основних елементів
     const closeBtn = this.querySelector('#close-modal');
     if (closeBtn) {
       closeBtn.addEventListener('click', this.handleCloseModal);
     }
 
-    const productSelect = this.querySelector('#product-select');
-    if (productSelect) {
-      productSelect.addEventListener('change', this.handleProductSelect);
+    const searchInput = this.querySelector('#product-search');
+    if (searchInput) {
+      searchInput.addEventListener('input', this.handleSearchInput);
       // Встановлюємо поточне значення
-      if (this.selectedProductId) {
-        productSelect.value = this.selectedProductId;
+      searchInput.value = this.searchQuery;
+
+      // Фокусуємо поле пошуку при відкритті модального вікна
+      if (this.isOpen && !this.selectedProductId) {
+        setTimeout(() => searchInput.focus(), 100);
       }
+    }
+
+    // Обробник для кнопки очищення пошуку
+    const clearSearchBtn = this.querySelector('#clear-search-btn');
+    if (clearSearchBtn) {
+      clearSearchBtn.addEventListener('click', () => {
+        this.searchQuery = '';
+        const searchInput = this.querySelector('#product-search');
+        if (searchInput) {
+          searchInput.value = '';
+          searchInput.focus();
+        }
+        this.filterProducts();
+        this.updateProductsList();
+      });
     }
 
     const gramsInput = this.querySelector('#grams-input');
@@ -164,6 +255,20 @@ class AddMealEntry extends HTMLElement {
     if (form) {
       form.addEventListener('submit', this.handleSubmit);
     }
+
+    // Додаємо обробники до елементів списку
+    this.querySelectorAll('.product-item').forEach(item => {
+      item.addEventListener('click', () => {
+        this.selectedProductId = item.dataset.id;
+        this.updateSelectedProductIndicator();
+
+        // Фокусуємо поле для введення грамів після вибору продукту
+        const gramsInput = this.querySelector('#grams-input');
+        if (gramsInput) {
+          gramsInput.focus();
+        }
+      });
+    });
   }
 
   handleCloseModal() {
@@ -171,12 +276,27 @@ class AddMealEntry extends HTMLElement {
     this.render();
   }
 
-  handleProductSelect(e) {
-    this.selectedProductId = e.target.value;
+  handleProductSelect(productId) {
+    this.selectedProductId = productId;
   }
 
   handleGramsInput(e) {
     this.grams = e.target.value;
+
+    // Оновлюємо інформацію про калорії при зміні грамів
+    this.updateCaloriesDisplay();
+
+    // Також оновлюємо стан кнопки відправки
+    const submitButton = this.querySelector('button[type="submit"]');
+    if (submitButton) {
+      if (!this.selectedProductId || !this.grams) {
+        submitButton.classList.add('opacity-50', 'cursor-not-allowed');
+        submitButton.setAttribute('disabled', 'disabled');
+      } else {
+        submitButton.classList.remove('opacity-50', 'cursor-not-allowed');
+        submitButton.removeAttribute('disabled');
+      }
+    }
   }
 
   async handleSubmit(e) {
@@ -256,7 +376,7 @@ class AddMealEntry extends HTMLElement {
 
     this.innerHTML = `
       <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div class="bg-white dark:bg-gray-800 rounded-lg w-[90%] max-w-md max-h-[90vh] overflow-y-auto shadow-lg">
+        <div class="bg-white dark:bg-gray-800 rounded-lg w-[95%] max-w-md max-h-[95vh] overflow-hidden shadow-lg flex flex-col">
           <div class="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
             <div class="text-lg font-semibold">Додати спожиту їжу</div>
             <button id="close-modal" class="bg-transparent border-none cursor-pointer text-gray-500 dark:text-gray-400">
@@ -266,7 +386,7 @@ class AddMealEntry extends HTMLElement {
             </button>
           </div>
           
-          <div class="p-4">
+          <div class="p-4 overflow-y-auto flex-1">
             ${this.loading ?
         `<div class="text-center py-4 text-gray-500 dark:text-gray-400">Завантаження продуктів...</div>` :
         this.renderForm()}
@@ -282,19 +402,52 @@ class AddMealEntry extends HTMLElement {
   }
 
   renderForm() {
+    // Знаходимо вибраний продукт для відображення калорій
+    const selectedProduct = this.products.find(p => p.id === this.selectedProductId);
+    const calculatedCalories = selectedProduct && this.grams
+      ? Math.round((selectedProduct.caloriesPer100g * parseInt(this.grams)) / 100)
+      : null;
+
     return `
       <form id="add-meal-form">
-        <search-products value="${this.searchQuery}"></search-products>
-        
         <div class="mb-4">
-          <label for="product-select" class="block mb-2 font-medium text-gray-700 dark:text-gray-300">Виберіть продукт</label>
-          <div class="product-select-container">
-            ${this.renderProductSelectOptions()}
+          <label for="product-search" class="block mb-2 font-medium text-gray-700 dark:text-gray-300">Знайти продукт</label>
+          <div class="relative">
+            <input 
+              type="text" 
+              id="product-search" 
+              placeholder="Почніть вводити назву продукту..." 
+              value="${this.searchQuery}"
+              class="w-full p-2 pl-10 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+            >
+            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            ${this.searchQuery ? `
+              <button 
+                type="button"
+                id="clear-search-btn"
+                class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-500"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            ` : ''}
           </div>
         </div>
         
+        <div class="max-h-80 overflow-y-auto mb-4 product-list-container">
+          ${this.renderProductList()}
+        </div>
+        
         <div class="mb-4">
-          <label for="grams-input" class="block mb-2 font-medium text-gray-700 dark:text-gray-300">Кількість (грам)</label>
+          <label for="grams-input" class="block mb-2 font-medium text-gray-700 dark:text-gray-300">
+            Кількість (грам)
+            <span class="ml-2 text-primary-600 dark:text-primary-400 calories-calculation ${calculatedCalories ? '' : 'hidden'}">${calculatedCalories ? calculatedCalories + ' ккал' : ''}</span>
+          </label>
           <input 
             type="number" 
             id="grams-input" 
@@ -303,13 +456,14 @@ class AddMealEntry extends HTMLElement {
             min="1" 
             required
             class="w-full p-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+            ${!this.selectedProductId ? 'disabled' : ''}
           >
         </div>
         
         <button 
           type="submit" 
-          class="w-full py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-md font-medium ${this.filteredProducts.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}"
-          ${this.filteredProducts.length === 0 ? 'disabled' : ''}
+          class="w-full py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-md font-medium ${(!this.selectedProductId || !this.grams) ? 'opacity-50 cursor-not-allowed' : ''}"
+          ${(!this.selectedProductId || !this.grams) ? 'disabled' : ''}
         >
           Додати
         </button>
@@ -319,6 +473,3 @@ class AddMealEntry extends HTMLElement {
 }
 
 customElements.define('add-meal-entry', AddMealEntry);
-
-// Import search component
-import './search-products.js';
