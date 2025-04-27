@@ -15,20 +15,6 @@ class AddMealEntry extends HTMLElement {
   connectedCallback() {
     this.render();
     this.loadProducts();
-    this.isOpen = true;
-    this.render();
-    // Set up event listeners
-    document.querySelector('#add-meal-btn')?.addEventListener('click', () => {
-      console.log('hello');
-
-    });
-  }
-
-  disconnectedCallback() {
-    document.querySelector('#add-meal-btn')?.removeEventListener('click', () => {
-      this.isOpen = true;
-      this.render();
-    });
   }
 
   async loadProducts() {
@@ -56,10 +42,10 @@ class AddMealEntry extends HTMLElement {
       this.render();
     });
 
-    // this.shadowRoot.querySelector('#modal-backdrop')?.addEventListener('click', () => {
-    //   this.isOpen = false;
-    //   this.render();
-    // });
+    this.shadowRoot.querySelector('#modal-backdrop')?.addEventListener('click', () => {
+      this.isOpen = false;
+      this.render();
+    });
 
     this.shadowRoot.querySelector('#product-select')?.addEventListener('change', (e) => {
       this.selectedProductId = e.target.value;

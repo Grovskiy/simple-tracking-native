@@ -122,20 +122,19 @@ class AppRoot extends HTMLElement {
     }
   }
 
-  // ВАЖЛИВО: Метод має бути всередині класу
   renderContent() {
     switch (this.route) {
       case 'login':
         return `<auth-page></auth-page>`;
       case 'dashboard':
         return `
-          <nav-bar user="${this.user?.email}"></nav-bar>
-          <calorie-tracker user-id="${this.user?.id}"></calorie-tracker>
+          <nav-bar user="${this.user?.email || ''}"></nav-bar>
+          <calorie-tracker user-id="${this.user?.id || ''}"></calorie-tracker>
         `;
       case 'settings':
         return `
-          <nav-bar user="${this.user?.email}"></nav-bar>
-          <settings-page user-id="${this.user?.id}"></settings-page>
+          <nav-bar user="${this.user?.email || ''}"></nav-bar>
+          <settings-page user-id="${this.user?.id || ''}"></settings-page>
         `;
       default:
         return `<div>404 Not Found</div>`;

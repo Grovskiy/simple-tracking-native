@@ -18,33 +18,48 @@ class CalorieTracker extends HTMLElement {
 
   async connectedCallback() {
     this.render();
+
     await this.loadData();
 
+    this.handlePrevClick = () => this.changeDate(-1);
+    this.handleNextClick = () => this.changeDate(1);
+    this.handleTodayClick = () => this.resetToToday();
+    this.handleEntriesUpdated = () => this.loadData();
+    this.handleGoalsUpdated = () => this.loadData();
+
     this.shadowRoot.querySelector('.date-prev')
-      .addEventListener('click', () => this.changeDate(-1));
+      .addEventListener('click', this.handlePrevClick);
 
     this.shadowRoot.querySelector('.date-next')
-      .addEventListener('click', () => this.changeDate(1));
+      .addEventListener('click', this.handleNextClick);
 
     this.shadowRoot.querySelector('.date-today')
-      .addEventListener('click', () => this.resetToToday());
+      .addEventListener('click', this.handleTodayClick);
 
-    window.addEventListener('entries-updated', () => this.loadData());
-    window.addEventListener('goals-updated', () => this.loadData());
+    window.addEventListener('entries-updated', this.handleEntriesUpdated);
+    window.addEventListener('goals-updated', this.handleGoalsUpdated);
+
+    this.shadowRoot.querySelector('#add-meal-btn')?.addEventListener('click', () => {
+      const addMealEntry = this.shadowRoot.querySelector('add-meal-entry');
+      if (addMealEntry) {
+        addMealEntry.isOpen = true;
+        addMealEntry.render();
+      }
+    });
   }
 
   disconnectedCallback() {
     this.shadowRoot.querySelector('.date-prev')
-      .removeEventListener('click', () => this.changeDate(-1));
+      .removeEventListener('click', this.handlePrevClick);
 
     this.shadowRoot.querySelector('.date-next')
-      .removeEventListener('click', () => this.changeDate(1));
+      .removeEventListener('click', this.handleNextClick);
 
     this.shadowRoot.querySelector('.date-today')
-      .removeEventListener('click', () => this.resetToToday());
+      .removeEventListener('click', this.handleTodayClick);
 
-    window.removeEventListener('entries-updated', () => this.loadData());
-    window.removeEventListener('goals-updated', () => this.loadData());
+    window.removeEventListener('entries-updated', this.handleEntriesUpdated);
+    window.removeEventListener('goals-updated', this.handleGoalsUpdated);
   }
 
   attributeChangedCallback() {

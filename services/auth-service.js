@@ -1,5 +1,4 @@
-// import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 import { SUPABASE_URL, SUPABASE_KEY } from '../config.js';
 
 // Initialize Supabase Client
@@ -60,7 +59,8 @@ export function onAuthStateChange(callback) {
     }
 
     // Викликаємо колбек з правильними параметрами
-    callback(event, session);
+    // callback(event, session);
+    callback({ event, session });
   });
 }
 
