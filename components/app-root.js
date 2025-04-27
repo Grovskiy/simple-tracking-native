@@ -9,8 +9,6 @@ class AppRoot extends HTMLElement {
     this.route = 'login';
     this.unsubAuth = null;
     this.unsubRealTime = null;
-
-    this.attachShadow({ mode: 'open' });
     this.render();
   }
 
@@ -77,43 +75,21 @@ class AppRoot extends HTMLElement {
   }
 
   render() {
-    this.shadowRoot.innerHTML = `
-      <style>
-        :host {
-          display: block;
-          min-height: 100vh;
-        }
-        .container {
-          max-width: 32rem;
-          margin: 0 auto;
-          padding: 1rem;
-        }
-        .loading {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          min-height: 100vh;
-        }
-        .loading-ring {
-          display: inline-block;
-          width: 50px;
-          height: 50px;
-          border: 6px solid #e5e7eb;
-          border-radius: 50%;
-          border-top-color: #4f46e5;
-          animation: spin 1s ease-in-out infinite;
-        }
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-      </style>
-      
-      <div class="container">
-        ${this.loading
-        ? `<div class="loading"><div class="loading-ring"></div></div>`
-        : this.renderContent()}
-      </div>
-    `;
+    if (this.loading) {
+      this.innerHTML = `
+        <div class="max-w-xl mx-auto p-4">
+          <div class="flex justify-center items-center min-h-screen">
+            <div class="w-12 h-12 border-4 border-gray-200 border-t-primary-600 rounded-full animate-spin"></div>
+          </div>
+        </div>
+      `;
+    } else {
+      this.innerHTML = `
+        <div class="max-w-xl mx-auto p-4">
+          ${this.renderContent()}
+        </div>
+      `;
+    }
 
     if (this.user && this.user.id) {
       window.appState = window.appState || {};

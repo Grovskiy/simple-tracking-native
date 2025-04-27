@@ -4,7 +4,6 @@ import { generateId } from '../utils/helpers.js';
 class AddProductForm extends HTMLElement {
   constructor() {
     super();
-    this.attachShadow({ mode: 'open' });
     this.productName = '';
     this.caloriesValue = '';
   }
@@ -15,15 +14,15 @@ class AddProductForm extends HTMLElement {
   }
 
   setupEventListeners() {
-    this.shadowRoot.querySelector('#product-name')?.addEventListener('input', (e) => {
+    this.querySelector('#product-name')?.addEventListener('input', (e) => {
       this.productName = e.target.value;
     });
 
-    this.shadowRoot.querySelector('#product-calories')?.addEventListener('input', (e) => {
+    this.querySelector('#product-calories')?.addEventListener('input', (e) => {
       this.caloriesValue = e.target.value;
     });
 
-    this.shadowRoot.querySelector('#product-form')?.addEventListener('submit', this.handleSubmit.bind(this));
+    this.querySelector('#product-form')?.addEventListener('submit', this.handleSubmit.bind(this));
   }
 
   async handleSubmit(e) {
@@ -87,103 +86,42 @@ class AddProductForm extends HTMLElement {
   }
 
   render() {
-    this.shadowRoot.innerHTML = `
-      <style>
-        :host {
-          display: block;
-          margin-bottom: 1rem;
-        }
-        h3 {
-          font-size: 1rem;
-          font-weight: 600;
-          margin-bottom: 0.75rem;
-        }
-        form {
-          display: flex;
-          gap: 0.5rem;
-        }
-        .form-group {
-          flex: 1;
-        }
-        .calories-group {
-          width: 8rem;
-        }
-        label {
-          display: block;
-          margin-bottom: 0.25rem;
-          font-size: 0.875rem;
-          color: #374151;
-        }
-        input {
-          width: 100%;
-          padding: 0.5rem;
-          border: 1px solid #d1d5db;
-          border-radius: 0.375rem;
-          font-size: 0.875rem;
-        }
-        button {
-          align-self: flex-end;
-          background-color: #4f46e5;
-          color: white;
-          border: none;
-          border-radius: 0.375rem;
-          padding: 0.5rem;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-        button:hover {
-          background-color: #4338ca;
-        }
-        button svg {
-          width: 1.25rem;
-          height: 1.25rem;
-        }
-        
-        @media (prefers-color-scheme: dark) {
-          label {
-            color: #e5e7eb;
-          }
-          input {
-            background-color: #374151;
-            border-color: #4b5563;
-            color: #e5e7eb;
-          }
-        }
-      </style>
-      
-      <h3>Додати новий продукт</h3>
-      <form id="product-form">
-        <div class="form-group">
-          <label for="product-name">Назва продукту</label>
-          <input 
-            type="text" 
-            id="product-name" 
-            placeholder="Цільнозерновий хліб" 
-            value="${this.productName}"
-            required
-          >
-        </div>
-        
-        <div class="form-group calories-group">
-          <label for="product-calories">Ккал на 100г</label>
-          <input 
-            type="number" 
-            id="product-calories" 
-            placeholder="244" 
-            value="${this.caloriesValue}"
-            min="1"
-            required
-          >
-        </div>
-        
-        <button type="submit">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-          </svg>
-        </button>
-      </form>
+    this.innerHTML = `
+      <div class="mb-4">
+        <h3 class="text-base font-semibold mb-3">Додати новий продукт</h3>
+        <form id="product-form" class="flex gap-2">
+          <div class="flex-1">
+            <label class="block mb-1 text-sm text-gray-700 dark:text-gray-300" for="product-name">Назва продукту</label>
+            <input 
+              class="w-full p-2 border border-gray-300 dark:border-gray-700 rounded-md text-sm dark:bg-gray-800 dark:text-gray-100"
+              type="text" 
+              id="product-name" 
+              placeholder="Цільнозерновий хліб" 
+              value="${this.productName}"
+              required
+            >
+          </div>
+          
+          <div class="w-32">
+            <label class="block mb-1 text-sm text-gray-700 dark:text-gray-300" for="product-calories">Ккал на 100г</label>
+            <input 
+              class="w-full p-2 border border-gray-300 dark:border-gray-700 rounded-md text-sm dark:bg-gray-800 dark:text-gray-100"
+              type="number" 
+              id="product-calories" 
+              placeholder="244" 
+              value="${this.caloriesValue}"
+              min="1"
+              required
+            >
+          </div>
+          
+          <button type="submit" class="self-end bg-primary-600 hover:bg-primary-700 text-white rounded-md p-2 flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+          </button>
+        </form>
+      </div>
     `;
   }
 }

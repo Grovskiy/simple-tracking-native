@@ -5,7 +5,6 @@ import { getTodayDate, formatDate } from '../utils/helpers.js';
 class CalorieTracker extends HTMLElement {
   constructor() {
     super();
-    this.attachShadow({ mode: 'open' });
     this.entries = [];
     this.loading = true;
     this.selectedDate = getTodayDate();
@@ -27,20 +26,20 @@ class CalorieTracker extends HTMLElement {
     this.handleEntriesUpdated = () => this.loadData();
     this.handleGoalsUpdated = () => this.loadData();
 
-    this.shadowRoot.querySelector('.date-prev')
+    this.querySelector('.date-prev')
       .addEventListener('click', this.handlePrevClick);
 
-    this.shadowRoot.querySelector('.date-next')
+    this.querySelector('.date-next')
       .addEventListener('click', this.handleNextClick);
 
-    this.shadowRoot.querySelector('.date-today')
+    this.querySelector('.date-today')
       .addEventListener('click', this.handleTodayClick);
 
     window.addEventListener('entries-updated', this.handleEntriesUpdated);
     window.addEventListener('goals-updated', this.handleGoalsUpdated);
 
-    this.shadowRoot.querySelector('#add-meal-btn')?.addEventListener('click', () => {
-      const addMealEntry = this.shadowRoot.querySelector('add-meal-entry');
+    this.querySelector('#add-meal-btn')?.addEventListener('click', () => {
+      const addMealEntry = document.querySelector('add-meal-entry');
       if (addMealEntry) {
         addMealEntry.isOpen = true;
         addMealEntry.render();
@@ -49,14 +48,14 @@ class CalorieTracker extends HTMLElement {
   }
 
   disconnectedCallback() {
-    this.shadowRoot.querySelector('.date-prev')
-      .removeEventListener('click', this.handlePrevClick);
+    this.querySelector('.date-prev')
+      ?.removeEventListener('click', this.handlePrevClick);
 
-    this.shadowRoot.querySelector('.date-next')
-      .removeEventListener('click', this.handleNextClick);
+    this.querySelector('.date-next')
+      ?.removeEventListener('click', this.handleNextClick);
 
-    this.shadowRoot.querySelector('.date-today')
-      .removeEventListener('click', this.handleTodayClick);
+    this.querySelector('.date-today')
+      ?.removeEventListener('click', this.handleTodayClick);
 
     window.removeEventListener('entries-updated', this.handleEntriesUpdated);
     window.removeEventListener('goals-updated', this.handleGoalsUpdated);
@@ -91,7 +90,7 @@ class CalorieTracker extends HTMLElement {
   }
 
   setupEntryDeleteListeners() {
-    this.shadowRoot.querySelectorAll('.delete-entry').forEach(btn => {
+    this.querySelectorAll('.delete-entry').forEach(btn => {
       btn.addEventListener('click', async (e) => {
         const entryId = e.target.closest('.entry-item').dataset.id;
         try {
@@ -163,211 +162,24 @@ class CalorieTracker extends HTMLElement {
   }
 
   render() {
-    this.shadowRoot.innerHTML = `
-      <style>
-        :host {
-          display: block;
-        }
-        .container {
-          padding-bottom: 5rem;
-        }
-        .date-selector {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 1rem;
-          padding: 0.5rem;
-          background-color: white;
-          border-radius: 0.5rem;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-        .date-nav {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 2.5rem;
-          height: 2.5rem;
-          cursor: pointer;
-          border-radius: 9999px;
-          transition: background-color 0.2s;
-        }
-        .date-nav:hover {
-          background-color: #f3f4f6;
-        }
-        .date-today {
-          display: flex;
-          align-items: center;
-          padding: 0.5rem 1rem;
-          font-weight: 500;
-          cursor: pointer;
-          border-radius: 0.5rem;
-          transition: background-color 0.2s;
-        }
-        .date-today:hover {
-          background-color: #f3f4f6;
-        }
-        .date-today svg {
-          margin-right: 0.5rem;
-        }
-        .progress-card {
-          background-color: white;
-          border-radius: 0.5rem;
-          padding: 1rem;
-          margin-bottom: 1rem;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-        .progress-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 0.5rem;
-        }
-        .progress-bar {
-          height: 0.5rem;
-          background-color: #e5e7eb;
-          border-radius: 9999px;
-          overflow: hidden;
-          margin-bottom: 0.75rem;
-        }
-        .progress-value {
-          height: 100%;
-          border-radius: 9999px;
-          transition: width 0.3s ease;
-        }
-        .progress-stats {
-          display: flex;
-          justify-content: space-between;
-          font-size: 0.875rem;
-        }
-        .stat-label {
-          color: #6b7280;
-          margin-bottom: 0.25rem;
-        }
-        .entries-card {
-          background-color: white;
-          border-radius: 0.5rem;
-          padding: 1rem;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-        .entry-item {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 0.75rem;
-          margin-bottom: 0.5rem;
-          background-color: #f3f4f6;
-          border-radius: 0.375rem;
-        }
-        .entry-details {
-          flex: 1;
-          min-width: 0;
-        }
-        .entry-name {
-          font-weight: 500;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .entry-grams {
-          font-size: 0.75rem;
-          color: #6b7280;
-        }
-        .entry-calories {
-          font-weight: 500;
-          margin-right: 1rem;
-        }
-        .delete-entry {
-          color: #6b7280;
-          background: none;
-          border: none;
-          cursor: pointer;
-          padding: 0.25rem;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 0.25rem;
-          transition: background-color 0.2s;
-        }
-        .delete-entry:hover {
-          background-color: #e5e7eb;
-          color: #ef4444;
-        }
-        .delete-entry svg {
-          width: 1.25rem;
-          height: 1.25rem;
-        }
-        .empty-state {
-          text-align: center;
-          padding: 2rem 0;
-          color: #6b7280;
-        }
-        .loading {
-          display: flex;
-          justify-content: center;
-          padding: 2rem 0;
-        }
-        .add-meal-btn {
-          position: fixed;
-          bottom: 5rem;
-          right: 1.5rem;
-          width: 3.5rem;
-          height: 3.5rem;
-          background-color: #4f46e5;
-          color: white;
-          border: none;
-          border-radius: 9999px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-          cursor: pointer;
-          z-index: 10;
-          transition: background-color 0.2s;
-        }
-        .add-meal-btn:hover {
-          background-color: #4338ca;
-        }
-        .add-meal-btn svg {
-          width: 1.5rem;
-          height: 1.5rem;
-        }
-        
-        @media (prefers-color-scheme: dark) {
-          .date-selector, .progress-card, .entries-card {
-            background-color: #1f2937;
-          }
-          .date-nav:hover, .date-today:hover {
-            background-color: #374151;
-          }
-          .progress-bar {
-            background-color: #374151;
-          }
-          .entry-item {
-            background-color: #374151;
-          }
-          .delete-entry:hover {
-            background-color: #4b5563;
-          }
-        }
-      </style>
-      
-      <div class="container">
-        <div class="date-selector">
-          <div class="date-nav date-prev">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20">
+    this.innerHTML = `
+      <div class="pb-20">
+        <div class="flex justify-between items-center mb-4 p-2 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+          <div class="flex items-center justify-center w-10 h-10 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full date-prev">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-5 h-5">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
             </svg>
           </div>
           
-          <div class="date-today">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20">
+          <div class="flex items-center px-4 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg date-today">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-5 h-5 mr-2">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
             ${formatDate(this.selectedDate)}
           </div>
           
-          <div class="date-nav date-next">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20">
+          <div class="flex items-center justify-center w-10 h-10 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full date-next">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-5 h-5">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
             </svg>
           </div>
@@ -380,8 +192,8 @@ class CalorieTracker extends HTMLElement {
 
   renderLoading() {
     return `
-      <div class="loading">
-        <svg class="animate-spin h-8 w-8 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <div class="flex justify-center py-8">
+        <svg class="animate-spin h-8 w-8 text-primary-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
@@ -396,24 +208,24 @@ class CalorieTracker extends HTMLElement {
     const { color, barColor } = this.getProgressStatus();
 
     return `
-      <div class="progress-card">
-        <div class="progress-header">
+      <div class="bg-white dark:bg-gray-800 rounded-lg p-4 mb-4 shadow-sm">
+        <div class="flex justify-between items-center mb-2">
           <span class="text-lg font-medium">Прогрес</span>
           <span class="text-lg font-medium ${color}">${progressPercentage}%</span>
         </div>
         
-        <div class="progress-bar">
-          <div class="progress-value ${barColor}" style="width: ${progressPercentage}%"></div>
+        <div class="h-2 bg-gray-200 dark:bg-gray-700 rounded-full mb-3 overflow-hidden">
+          <div class="h-full ${barColor} rounded-full" style="width: ${progressPercentage}%"></div>
         </div>
         
-        <div class="progress-stats">
+        <div class="flex justify-between text-sm">
           <div>
-            <div class="stat-label">Спожито</div>
+            <div class="text-gray-500 dark:text-gray-400 mb-1">Спожито</div>
             <div class="font-medium">${totalCalories} ккал</div>
           </div>
           
           <div class="text-center">
-            <div class="stat-label">Залишилось</div>
+            <div class="text-gray-500 dark:text-gray-400 mb-1">Залишилось</div>
             <div class="font-medium ${color}">
               ${Math.abs(remainingCalories)} ккал
               ${remainingCalories >= 0
@@ -425,21 +237,21 @@ class CalorieTracker extends HTMLElement {
           </div>
           
           <div class="text-right">
-            <div class="stat-label">Ціль</div>
+            <div class="text-gray-500 dark:text-gray-400 mb-1">Ціль</div>
             <div class="font-medium">${this.calorieGoal || 'Не вказано'}</div>
           </div>
         </div>
       </div>
       
-      <div class="entries-card">
+      <div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
         ${this.entries.length > 0
         ? this.entries.map(entry => this.renderEntryItem(entry)).join('')
-        : `<div class="empty-state">Додайте прийом їжі за цей день</div>`
+        : `<div class="text-center py-8 text-gray-500 dark:text-gray-400">Додайте прийом їжі за цей день</div>`
       }
       </div>
       
-      <button class="add-meal-btn" id="add-meal-btn">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <button id="add-meal-btn" class="fixed bottom-20 right-6 w-14 h-14 bg-primary-600 hover:bg-primary-700 text-white rounded-full flex items-center justify-center shadow-lg z-10">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-6 h-6">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
         </svg>
       </button>
@@ -453,16 +265,16 @@ class CalorieTracker extends HTMLElement {
       : 0;
 
     return `
-      <div class="entry-item" data-id="${entry.id}">
-        <div class="entry-details">
-          <div class="entry-name">${entry.productName}</div>
-          <div class="entry-grams">${entry.grams}г</div>
+      <div class="flex justify-between items-center py-3 px-3 mb-2 bg-gray-100 dark:bg-gray-700 rounded-md entry-item" data-id="${entry.id}">
+        <div class="flex-1 min-w-0">
+          <div class="font-medium whitespace-nowrap overflow-hidden text-ellipsis">${entry.productName}</div>
+          <div class="text-xs text-gray-500 dark:text-gray-400">${entry.grams}г</div>
         </div>
         
-        <div class="entry-calories">${entry.calories} ккал</div>
+        <div class="font-medium mr-4">${entry.calories} ккал</div>
         
-        <button class="delete-entry">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <button class="delete-entry text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-red-500 p-1 rounded">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-5 h-5">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
           </svg>
         </button>

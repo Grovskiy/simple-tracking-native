@@ -4,7 +4,6 @@ import { generateId, getTodayDate } from '../utils/helpers.js';
 class AddMealEntry extends HTMLElement {
   constructor() {
     super();
-    this.attachShadow({ mode: 'open' });
     this.products = [];
     this.loading = true;
     this.isOpen = false;
@@ -37,20 +36,20 @@ class AddMealEntry extends HTMLElement {
   }
 
   setupEventListeners() {
-    this.shadowRoot.querySelector('#close-modal')?.addEventListener('click', () => {
+    this.querySelector('#close-modal')?.addEventListener('click', () => {
       this.isOpen = false;
       this.render();
     });
 
-    this.shadowRoot.querySelector('#product-select')?.addEventListener('change', (e) => {
+    this.querySelector('#product-select')?.addEventListener('change', (e) => {
       this.selectedProductId = e.target.value;
     });
 
-    this.shadowRoot.querySelector('#grams-input')?.addEventListener('input', (e) => {
+    this.querySelector('#grams-input')?.addEventListener('input', (e) => {
       this.grams = e.target.value;
     });
 
-    this.shadowRoot.querySelector('#add-meal-form')?.addEventListener('submit', (e) => {
+    this.querySelector('#add-meal-form')?.addEventListener('submit', (e) => {
       e.preventDefault();
       this.handleSubmit();
     });
@@ -124,127 +123,25 @@ class AddMealEntry extends HTMLElement {
 
   render() {
     if (!this.isOpen) {
-      this.shadowRoot.innerHTML = '';
+      this.innerHTML = '';
       return;
     }
 
-    this.shadowRoot.innerHTML = `
-      <style>
-        .modal-backdrop {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background-color: rgba(0, 0, 0, 0.5);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 50;
-        }
-        .modal {
-          background-color: white;
-          border-radius: 0.5rem;
-          width: 90%;
-          max-width: 28rem;
-          max-height: 90vh;
-          overflow-y: auto;
-          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-        }
-        .modal-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 1rem;
-          border-bottom: 1px solid #e5e7eb;
-        }
-        .modal-title {
-          font-size: 1.125rem;
-          font-weight: 600;
-        }
-        .close-btn {
-          background: none;
-          border: none;
-          cursor: pointer;
-          color: #6b7280;
-        }
-        .close-btn svg {
-          width: 1.5rem;
-          height: 1.5rem;
-        }
-        .modal-body {
-          padding: 1rem;
-        }
-        .form-group {
-          margin-bottom: 1rem;
-        }
-        label {
-          display: block;
-          margin-bottom: 0.5rem;
-          font-weight: 500;
-          color: #374151;
-        }
-        select, input {
-          width: 100%;
-          padding: 0.5rem;
-          border: 1px solid #d1d5db;
-          border-radius: 0.375rem;
-          background-color: white;
-          font-size: 1rem;
-        }
-        .submit-btn {
-          display: block;
-          width: 100%;
-          padding: 0.75rem;
-          background-color: #4f46e5;
-          color: white;
-          border: none;
-          border-radius: 0.375rem;
-          font-weight: 500;
-          cursor: pointer;
-          transition: background-color 0.2s;
-        }
-        .submit-btn:hover {
-          background-color: #4338ca;
-        }
-        .loading {
-          text-align: center;
-          padding: 1rem;
-          color: #6b7280;
-        }
-        
-        @media (prefers-color-scheme: dark) {
-          .modal {
-            background-color: #1f2937;
-          }
-          .modal-header {
-            border-bottom-color: #374151;
-          }
-          label {
-            color: #e5e7eb;
-          }
-          select, input {
-            background-color: #374151;
-            border-color: #4b5563;
-            color: #e5e7eb;
-          }
-        }
-      </style>
-      
-      <div id="modal-backdrop" class="modal-backdrop">
-        <div class="modal" @click.stop>
-          <div class="modal-header">
-            <div class="modal-title">Додати спожиту їжу</div>
-            <button id="close-modal" class="close-btn">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    this.innerHTML = `
+      <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div class="bg-white dark:bg-gray-800 rounded-lg w-[90%] max-w-md max-h-[90vh] overflow-y-auto shadow-lg">
+          <div class="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
+            <div class="text-lg font-semibold">Додати спожиту їжу</div>
+            <button id="close-modal" class="bg-transparent border-none cursor-pointer text-gray-500 dark:text-gray-400">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
           
-          <div class="modal-body">
+          <div class="p-4">
             ${this.loading ?
-        `<div class="loading">Завантаження продуктів...</div>` :
+        `<div class="text-center py-4 text-gray-500 dark:text-gray-400">Завантаження продуктів...</div>` :
         this.renderForm()}
           </div>
         </div>
@@ -257,9 +154,13 @@ class AddMealEntry extends HTMLElement {
   renderForm() {
     return `
       <form id="add-meal-form">
-        <div class="form-group">
-          <label for="product-select">Виберіть продукт</label>
-          <select id="product-select" required>
+        <div class="mb-4">
+          <label for="product-select" class="block mb-2 font-medium text-gray-700 dark:text-gray-300">Виберіть продукт</label>
+          <select 
+            id="product-select" 
+            class="w-full p-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+            required
+          >
             <option value="" disabled ${!this.selectedProductId ? 'selected' : ''}>
               Виберіть продукт
             </option>
@@ -271,8 +172,8 @@ class AddMealEntry extends HTMLElement {
           </select>
         </div>
         
-        <div class="form-group">
-          <label for="grams-input">Кількість (грам)</label>
+        <div class="mb-4">
+          <label for="grams-input" class="block mb-2 font-medium text-gray-700 dark:text-gray-300">Кількість (грам)</label>
           <input 
             type="number" 
             id="grams-input" 
@@ -280,10 +181,16 @@ class AddMealEntry extends HTMLElement {
             value="${this.grams}"
             min="1" 
             required
+            class="w-full p-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
           >
         </div>
         
-        <button type="submit" class="submit-btn">Додати</button>
+        <button 
+          type="submit" 
+          class="w-full py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-md font-medium"
+        >
+          Додати
+        </button>
       </form>
     `;
   }
