@@ -4,6 +4,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
     root: './',
+    base: '/simple-tracking-native/',
     build: {
         outDir: 'dist',
         rollupOptions: {
@@ -20,13 +21,13 @@ export default defineConfig({
         VitePWA({
             // Режим за замовчуванням
             mode: 'development',
-            base: '/',
+            base: '/simple-tracking-native/',
 
             // Стратегії для розробки
             devOptions: {
                 enabled: true,          // Увімкнути в режимі розробки
                 type: 'module',         // Тип SW для розробки
-                navigateFallback: '/',  // SPA fallback
+                navigateFallback: '/simple-tracking-native/', // SPA fallback
             },
 
             // Налаштування для manifest.json

@@ -7,18 +7,16 @@ const supabaseKey = SUPABASE_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 export async function signInWithGoogle() {
+  // Визначаємо URL для перенаправлення після авторизації
+  const redirectUrl = import.meta.env.PROD
+    ? `${window.location.origin}/simple-tracking-native`
+    : window.location.origin;
+
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: window.location.origin
+      redirectTo: redirectUrl
     }
-    // options: {
-    //   redirectTo: `${window.location.origin}/index.html`,
-    //   queryParams: {
-    //     access_type: 'offline',
-    //     prompt: 'consent'
-    //   }
-    // }
   });
 
   if (error) throw error;
@@ -59,7 +57,6 @@ export function onAuthStateChange(callback) {
     }
 
     // Викликаємо колбек з правильними параметрами
-    // callback(event, session);
     callback({ event, session });
   });
 }
