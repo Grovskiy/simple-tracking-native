@@ -13,30 +13,42 @@ class AppRoot extends HTMLElement {
   }
 
   async connectedCallback() {
-    if (window.location.hash && window.location.hash.includes('access_token')) {
+    // Обробляємо URL callback після авторизації (містить токен доступу)
+    if (window.location.hash && (window.location.hash.includes('access_token') || window.location.hash.includes('error'))) {
       this.loading = true;
       this.render();
-      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Вичікуємо трохи, щоб Supabase мав час обробити токен і оновити сесію
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Очищуємо URL без перезавантаження сторінки
+      if (window.history && window.history.replaceState) {
+        // Визначаємо базовий шлях
+        const basePath = '/simple-tracking-native';
+        window.history.replaceState(null, document.title, basePath);
+      }
     }
 
     try {
       const { data: { user } } = await getCurrentUser();
       this.user = user;
-      this.route = user ? 'dashboard' : 'login';
-
-      if (user && window.location.hash) {
-        history.pushState('', document.title, window.location.pathname + window.location.search);
-      }
 
       if (user) {
+        this.route = 'dashboard';
+        console.log('Користувач авторизований, відображаємо dashboard');
+
         this.unsubRealTime = subscribeToRealTimeUpdates(user.id, {
           onProductsChange: () => window.dispatchEvent(new CustomEvent('products-updated')),
           onEntriesChange: () => window.dispatchEvent(new CustomEvent('entries-updated')),
           onGoalsChange: () => window.dispatchEvent(new CustomEvent('goals-updated')),
         });
+      } else {
+        this.route = 'login';
+        console.log('Користувач не авторизований, відображаємо login');
       }
     } catch (error) {
       console.error('Error getting current user:', error);
+      this.route = 'login';
     } finally {
       this.loading = false;
       this.render();
