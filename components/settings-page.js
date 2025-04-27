@@ -477,7 +477,7 @@ class SettingsPage extends HTMLElement {
         }
       </style>
       
-      <div class="container">
+      <div class="container test bg-red-400">
         <div class="tabs">
           <div class="tab-btn ${this.activeTab === 'products' ? 'active' : ''}" data-tab="products">
             Мої продукти

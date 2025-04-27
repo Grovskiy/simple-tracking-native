@@ -2,16 +2,20 @@
   "name": "calorie-tracker-vanilla",
   "version": "1.0.0",
   "description": "Calorie tracker using Web Components and Supabase",
+  "type": "module",
   "scripts": {
-    "start": "serve .",
-    "dev": "concurrently \"serve .\" \"tailwindcss -i ./src/styles/input.css -o ./assets/css/styles.css --watch\"",
-    "build": "tailwindcss -i ./src/styles/input.css -o ./assets/css/styles.css --minify && workbox generateSW workbox-config.js"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.6"
+  },
   "devDependencies": {
-    "concurrently": "^8.2.2",
-    "serve": "^14.2.0",
-    "tailwindcss": "^4.0.0",
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^3.4.17",
+    "vite": "^5.1.4",
     "workbox-cli": "^7.0.0"
   }
 }

@@ -42,11 +42,6 @@ class AddMealEntry extends HTMLElement {
       this.render();
     });
 
-    this.shadowRoot.querySelector('#modal-backdrop')?.addEventListener('click', () => {
-      this.isOpen = false;
-      this.render();
-    });
-
     this.shadowRoot.querySelector('#product-select')?.addEventListener('change', (e) => {
       this.selectedProductId = e.target.value;
     });
