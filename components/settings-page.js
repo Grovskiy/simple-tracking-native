@@ -15,6 +15,10 @@ class SettingsPage extends HTMLElement {
     this.goalValue = '';
     this.productToDelete = null;
     this.showDeleteModal = false;
+
+    // Зв'язуємо методи для використання як колбеки
+    this.handleProductFormSubmit = this.handleProductFormSubmit.bind(this);
+    this.handleAddProduct = this.handleAddProduct.bind(this);
   }
 
   static get observedAttributes() {
@@ -25,6 +29,11 @@ class SettingsPage extends HTMLElement {
     this.render();
     await this.loadData();
     this.setupEventListeners();
+  }
+
+  disconnectedCallback() {
+    // Видаляємо обробник події form-submit при видаленні компонента з DOM
+    this.removeEventListener('product-form-submit', this.handleProductFormSubmit);
   }
 
   attributeChangedCallback() {
@@ -79,6 +88,9 @@ class SettingsPage extends HTMLElement {
   }
 
   setupEventListeners() {
+    // Перед додаванням нових обробників, видаляємо старі
+    this.removeAllEventListeners();
+
     // Tab switching
     this.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -89,22 +101,46 @@ class SettingsPage extends HTMLElement {
     });
 
     // Обробник події від add-product-form компонента
-    this.addEventListener('product-form-submit', this.handleProductFormSubmit.bind(this));
+    this.addEventListener('product-form-submit', this.handleProductFormSubmit);
 
     // Add product form (для випадку, коли не використовується компонент add-product-form)
-    this.querySelector('#product-form')?.addEventListener('submit', this.handleAddProduct.bind(this));
-    this.querySelector('#product-name')?.addEventListener('input', (e) => {
-      this.productName = e.target.value;
-    });
-    this.querySelector('#product-calories')?.addEventListener('input', (e) => {
-      this.caloriesValue = e.target.value;
-    });
+    const productForm = this.querySelector('#product-form');
+    if (productForm) {
+      productForm.addEventListener('submit', this.handleAddProduct);
+    }
+
+    const productNameInput = this.querySelector('#product-name');
+    if (productNameInput) {
+      productNameInput.addEventListener('input', (e) => {
+        this.productName = e.target.value;
+      });
+      // Встановлюємо поточне значення
+      productNameInput.value = this.productName;
+    }
+
+    const productCaloriesInput = this.querySelector('#product-calories');
+    if (productCaloriesInput) {
+      productCaloriesInput.addEventListener('input', (e) => {
+        this.caloriesValue = e.target.value;
+      });
+      // Встановлюємо поточне значення
+      productCaloriesInput.value = this.caloriesValue;
+    }
 
     // Goal setting form
-    this.querySelector('#goal-form')?.addEventListener('submit', this.handleSetGoal.bind(this));
-    this.querySelector('#goal-value')?.addEventListener('input', (e) => {
-      this.goalValue = e.target.value;
-    });
+    const goalForm = this.querySelector('#goal-form');
+    if (goalForm) {
+      goalForm.addEventListener('submit', this.handleSetGoal.bind(this));
+    }
+
+    const goalValueInput = this.querySelector('#goal-value');
+    if (goalValueInput) {
+      goalValueInput.addEventListener('input', (e) => {
+        this.goalValue = e.target.value;
+      });
+      // Встановлюємо поточне значення
+      goalValueInput.value = this.goalValue;
+    }
 
     // Delete buttons
     this.querySelectorAll('.delete-product-btn').forEach(btn => {
@@ -121,36 +157,53 @@ class SettingsPage extends HTMLElement {
     });
   }
 
+  // Допоміжний метод для видалення всіх обробників подій
+  removeAllEventListeners() {
+    // Видаляємо обробник події form-submit
+    this.removeEventListener('product-form-submit', this.handleProductFormSubmit);
+
+    // Тут можна додати інші специфічні обробники, які потрібно видалити
+  }
+
   setupDeleteModalListeners() {
-    this.querySelector('#cancel-delete')?.addEventListener('click', () => {
-      this.showDeleteModal = false;
-      this.productToDelete = null;
-      this.render();
-      this.setupEventListeners();
-    });
+    const cancelButton = this.querySelector('#cancel-delete');
+    if (cancelButton) {
+      cancelButton.addEventListener('click', () => {
+        this.showDeleteModal = false;
+        this.productToDelete = null;
+        this.render();
+        this.setupEventListeners();
+      });
+    }
 
-    this.querySelector('#confirm-delete')?.addEventListener('click', async () => {
-      if (this.productToDelete) {
-        try {
-          await deleteProduct(this.productToDelete.id);
-          this.products = this.products.filter(p => p.id !== this.productToDelete.id);
-        } catch (error) {
-          console.error('Error deleting product:', error);
-        } finally {
-          this.showDeleteModal = false;
-          this.productToDelete = null;
-          this.render();
-          this.setupEventListeners();
+    const confirmButton = this.querySelector('#confirm-delete');
+    if (confirmButton) {
+      confirmButton.addEventListener('click', async () => {
+        if (this.productToDelete) {
+          try {
+            await deleteProduct(this.productToDelete.id);
+            this.products = this.products.filter(p => p.id !== this.productToDelete.id);
+          } catch (error) {
+            console.error('Error deleting product:', error);
+          } finally {
+            this.showDeleteModal = false;
+            this.productToDelete = null;
+            this.render();
+            this.setupEventListeners();
+          }
         }
-      }
-    });
+      });
+    }
 
-    this.querySelector('#delete-modal-backdrop')?.addEventListener('click', () => {
-      this.showDeleteModal = false;
-      this.productToDelete = null;
-      this.render();
-      this.setupEventListeners();
-    });
+    const modalBackdrop = this.querySelector('#delete-modal-backdrop');
+    if (modalBackdrop) {
+      modalBackdrop.addEventListener('click', () => {
+        this.showDeleteModal = false;
+        this.productToDelete = null;
+        this.render();
+        this.setupEventListeners();
+      });
+    }
   }
 
   // Обробник події від компонента add-product-form
@@ -231,13 +284,13 @@ class SettingsPage extends HTMLElement {
       <div class="pb-20">
         <div class="flex border-b border-gray-200 dark:border-gray-700 mb-4">
           <div 
-            class="px-4 py-3 font-medium cursor-pointer transition-all ${this.activeTab === 'products' ? 'text-primary-600 dark:text-primary-400 border-b-2 border-primary-600 dark:border-primary-400' : 'text-gray-500 dark:text-gray-400'}" 
+            class="px-4 py-3 font-medium cursor-pointer transition-all tab-btn ${this.activeTab === 'products' ? 'text-primary-600 dark:text-primary-400 border-b-2 border-primary-600 dark:border-primary-400' : 'text-gray-500 dark:text-gray-400'}" 
             data-tab="products"
           >
             Мої продукти
           </div>
           <div 
-            class="px-4 py-3 font-medium cursor-pointer transition-all ${this.activeTab === 'goals' ? 'text-primary-600 dark:text-primary-400 border-b-2 border-primary-600 dark:border-primary-400' : 'text-gray-500 dark:text-gray-400'}" 
+            class="px-4 py-3 font-medium cursor-pointer transition-all tab-btn ${this.activeTab === 'goals' ? 'text-primary-600 dark:text-primary-400 border-b-2 border-primary-600 dark:border-primary-400' : 'text-gray-500 dark:text-gray-400'}" 
             data-tab="goals"
           >
             Цілі

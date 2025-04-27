@@ -9,11 +9,22 @@ class AddMealEntry extends HTMLElement {
     this.isOpen = false;
     this.selectedProductId = '';
     this.grams = '';
+
+    // Зв'язуємо методи для використання як колбеки
+    this.handleCloseModal = this.handleCloseModal.bind(this);
+    this.handleProductSelect = this.handleProductSelect.bind(this);
+    this.handleGramsInput = this.handleGramsInput.bind(this);
+    this.handleSubmit = this.handleSubmit.bind(this);
   }
 
   connectedCallback() {
     this.render();
     this.loadProducts();
+  }
+
+  disconnectedCallback() {
+    // Видаляємо всі обробники подій при видаленні компонента
+    this.removeEventListeners();
   }
 
   async loadProducts() {
@@ -35,27 +46,77 @@ class AddMealEntry extends HTMLElement {
     }
   }
 
-  setupEventListeners() {
-    this.querySelector('#close-modal')?.addEventListener('click', () => {
-      this.isOpen = false;
-      this.render();
-    });
+  // Метод для видалення всіх обробників подій
+  removeEventListeners() {
+    const closeBtn = this.querySelector('#close-modal');
+    if (closeBtn) {
+      closeBtn.removeEventListener('click', this.handleCloseModal);
+    }
 
-    this.querySelector('#product-select')?.addEventListener('change', (e) => {
-      this.selectedProductId = e.target.value;
-    });
+    const productSelect = this.querySelector('#product-select');
+    if (productSelect) {
+      productSelect.removeEventListener('change', this.handleProductSelect);
+    }
 
-    this.querySelector('#grams-input')?.addEventListener('input', (e) => {
-      this.grams = e.target.value;
-    });
+    const gramsInput = this.querySelector('#grams-input');
+    if (gramsInput) {
+      gramsInput.removeEventListener('input', this.handleGramsInput);
+    }
 
-    this.querySelector('#add-meal-form')?.addEventListener('submit', (e) => {
-      e.preventDefault();
-      this.handleSubmit();
-    });
+    const form = this.querySelector('#add-meal-form');
+    if (form) {
+      form.removeEventListener('submit', this.handleSubmit);
+    }
   }
 
-  async handleSubmit() {
+  setupEventListeners() {
+    // Спочатку видаляємо всі обробники подій
+    this.removeEventListeners();
+
+    // Тепер додаємо нові
+    const closeBtn = this.querySelector('#close-modal');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', this.handleCloseModal);
+    }
+
+    const productSelect = this.querySelector('#product-select');
+    if (productSelect) {
+      productSelect.addEventListener('change', this.handleProductSelect);
+      // Встановлюємо поточне значення
+      if (this.selectedProductId) {
+        productSelect.value = this.selectedProductId;
+      }
+    }
+
+    const gramsInput = this.querySelector('#grams-input');
+    if (gramsInput) {
+      gramsInput.addEventListener('input', this.handleGramsInput);
+      // Встановлюємо поточне значення
+      gramsInput.value = this.grams;
+    }
+
+    const form = this.querySelector('#add-meal-form');
+    if (form) {
+      form.addEventListener('submit', this.handleSubmit);
+    }
+  }
+
+  handleCloseModal() {
+    this.isOpen = false;
+    this.render();
+  }
+
+  handleProductSelect(e) {
+    this.selectedProductId = e.target.value;
+  }
+
+  handleGramsInput(e) {
+    this.grams = e.target.value;
+  }
+
+  async handleSubmit(e) {
+    e.preventDefault();
+
     try {
       if (!this.selectedProductId || !this.grams) {
         return;
@@ -148,7 +209,10 @@ class AddMealEntry extends HTMLElement {
       </div>
     `;
 
-    this.setupEventListeners();
+    // Налаштовуємо обробники подій лише якщо не в режимі завантаження
+    if (!this.loading) {
+      this.setupEventListeners();
+    }
   }
 
   renderForm() {

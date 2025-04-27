@@ -6,6 +6,11 @@ class AddProductForm extends HTMLElement {
     super();
     this.productName = '';
     this.caloriesValue = '';
+
+    // Зв'язуємо методи для використання як колбеки
+    this.handleSubmit = this.handleSubmit.bind(this);
+    this.handleNameInput = this.handleNameInput.bind(this);
+    this.handleCaloriesInput = this.handleCaloriesInput.bind(this);
   }
 
   connectedCallback() {
@@ -13,16 +18,59 @@ class AddProductForm extends HTMLElement {
     this.setupEventListeners();
   }
 
+  disconnectedCallback() {
+    // Видаляємо обробники подій при видаленні компонента
+    this.removeEventListeners();
+  }
+
   setupEventListeners() {
-    this.querySelector('#product-name')?.addEventListener('input', (e) => {
-      this.productName = e.target.value;
-    });
+    // Спочатку видаляємо всі поточні обробники
+    this.removeEventListeners();
 
-    this.querySelector('#product-calories')?.addEventListener('input', (e) => {
-      this.caloriesValue = e.target.value;
-    });
+    // Потім додаємо нові
+    const nameInput = this.querySelector('#product-name');
+    if (nameInput) {
+      nameInput.addEventListener('input', this.handleNameInput);
+      // Встановлюємо поточне значення
+      nameInput.value = this.productName;
+    }
 
-    this.querySelector('#product-form')?.addEventListener('submit', this.handleSubmit.bind(this));
+    const caloriesInput = this.querySelector('#product-calories');
+    if (caloriesInput) {
+      caloriesInput.addEventListener('input', this.handleCaloriesInput);
+      // Встановлюємо поточне значення
+      caloriesInput.value = this.caloriesValue;
+    }
+
+    const form = this.querySelector('#product-form');
+    if (form) {
+      form.addEventListener('submit', this.handleSubmit);
+    }
+  }
+
+  removeEventListeners() {
+    const nameInput = this.querySelector('#product-name');
+    if (nameInput) {
+      nameInput.removeEventListener('input', this.handleNameInput);
+    }
+
+    const caloriesInput = this.querySelector('#product-calories');
+    if (caloriesInput) {
+      caloriesInput.removeEventListener('input', this.handleCaloriesInput);
+    }
+
+    const form = this.querySelector('#product-form');
+    if (form) {
+      form.removeEventListener('submit', this.handleSubmit);
+    }
+  }
+
+  handleNameInput(e) {
+    this.productName = e.target.value;
+  }
+
+  handleCaloriesInput(e) {
+    this.caloriesValue = e.target.value;
   }
 
   async handleSubmit(e) {
@@ -74,10 +122,15 @@ class AddProductForm extends HTMLElement {
       this.render();
       this.setupEventListeners();
 
-      // Notify parent component
-      this.dispatchEvent(new CustomEvent('product-added', {
+      // Надсилаємо подію на батьківський компонент з більш детальним ім'ям
+      // та включаємо дані продукту, щоб батьківський компонент міг їх використати
+      this.dispatchEvent(new CustomEvent('product-form-submit', {
         bubbles: true,
-        composed: true
+        composed: true,
+        detail: {
+          name: newProduct.name,
+          caloriesPer100g: newProduct.caloriesPer100g
+        }
       }));
     } catch (error) {
       console.error('Error adding product:', error);
