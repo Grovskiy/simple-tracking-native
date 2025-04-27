@@ -9,6 +9,14 @@ class CalorieTracker extends HTMLElement {
     this.loading = true;
     this.selectedDate = getTodayDate();
     this.calorieGoal = null;
+
+    // Зв'язуємо методи для використання як колбеки
+    this.handlePrevClick = this.handlePrevClick.bind(this);
+    this.handleNextClick = this.handleNextClick.bind(this);
+    this.handleTodayClick = this.handleTodayClick.bind(this);
+    this.handleEntriesUpdated = this.handleEntriesUpdated.bind(this);
+    this.handleGoalsUpdated = this.handleGoalsUpdated.bind(this);
+    this.handleAddMealClick = this.handleAddMealClick.bind(this);
   }
 
   static get observedAttributes() {
@@ -17,52 +25,91 @@ class CalorieTracker extends HTMLElement {
 
   async connectedCallback() {
     this.render();
-
     await this.loadData();
-
-    this.handlePrevClick = () => this.changeDate(-1);
-    this.handleNextClick = () => this.changeDate(1);
-    this.handleTodayClick = () => this.resetToToday();
-    this.handleEntriesUpdated = () => this.loadData();
-    this.handleGoalsUpdated = () => this.loadData();
-
-    this.querySelector('.date-prev')
-      .addEventListener('click', this.handlePrevClick);
-
-    this.querySelector('.date-next')
-      .addEventListener('click', this.handleNextClick);
-
-    this.querySelector('.date-today')
-      .addEventListener('click', this.handleTodayClick);
+    this.setupEventListeners();
 
     window.addEventListener('entries-updated', this.handleEntriesUpdated);
     window.addEventListener('goals-updated', this.handleGoalsUpdated);
-
-    this.querySelector('#add-meal-btn')?.addEventListener('click', () => {
-      const addMealEntry = document.querySelector('add-meal-entry');
-      if (addMealEntry) {
-        addMealEntry.isOpen = true;
-        addMealEntry.render();
-      }
-    });
   }
 
   disconnectedCallback() {
-    this.querySelector('.date-prev')
-      ?.removeEventListener('click', this.handlePrevClick);
-
-    this.querySelector('.date-next')
-      ?.removeEventListener('click', this.handleNextClick);
-
-    this.querySelector('.date-today')
-      ?.removeEventListener('click', this.handleTodayClick);
-
+    this.removeEventListeners();
     window.removeEventListener('entries-updated', this.handleEntriesUpdated);
     window.removeEventListener('goals-updated', this.handleGoalsUpdated);
   }
 
   attributeChangedCallback() {
     if (this.isConnected) this.loadData();
+  }
+
+  setupEventListeners() {
+    // Спочатку видаляємо будь-які існуючі слухачі
+    this.removeEventListeners();
+
+    // Додаємо нові слухачі подій
+    const prevButton = this.querySelector('.date-prev');
+    if (prevButton) {
+      prevButton.addEventListener('click', this.handlePrevClick);
+    }
+
+    const nextButton = this.querySelector('.date-next');
+    if (nextButton) {
+      nextButton.addEventListener('click', this.handleNextClick);
+    }
+
+    const todayButton = this.querySelector('.date-today');
+    if (todayButton) {
+      todayButton.addEventListener('click', this.handleTodayClick);
+    }
+
+    const addMealBtn = this.querySelector('#add-meal-btn');
+    if (addMealBtn) {
+      addMealBtn.addEventListener('click', this.handleAddMealClick);
+    }
+
+    this.setupEntryDeleteListeners();
+  }
+
+  removeEventListeners() {
+    const prevButton = this.querySelector('.date-prev');
+    if (prevButton) {
+      prevButton.removeEventListener('click', this.handlePrevClick);
+    }
+
+    const nextButton = this.querySelector('.date-next');
+    if (nextButton) {
+      nextButton.removeEventListener('click', this.handleNextClick);
+    }
+
+    const todayButton = this.querySelector('.date-today');
+    if (todayButton) {
+      todayButton.removeEventListener('click', this.handleTodayClick);
+    }
+
+    const addMealBtn = this.querySelector('#add-meal-btn');
+    if (addMealBtn) {
+      addMealBtn.removeEventListener('click', this.handleAddMealClick);
+    }
+  }
+
+  handlePrevClick() {
+    this.changeDate(-1);
+  }
+
+  handleNextClick() {
+    this.changeDate(1);
+  }
+
+  handleTodayClick() {
+    this.resetToToday();
+  }
+
+  handleAddMealClick() {
+    const addMealEntry = document.querySelector('add-meal-entry');
+    if (addMealEntry) {
+      addMealEntry.isOpen = true;
+      addMealEntry.render();
+    }
   }
 
   async loadData() {
@@ -85,7 +132,7 @@ class CalorieTracker extends HTMLElement {
     } finally {
       this.loading = false;
       this.render();
-      this.setupEntryDeleteListeners();
+      this.setupEventListeners();
     }
   }
 
@@ -101,6 +148,14 @@ class CalorieTracker extends HTMLElement {
         }
       });
     });
+  }
+
+  handleEntriesUpdated() {
+    this.loadData();
+  }
+
+  handleGoalsUpdated() {
+    this.loadData();
   }
 
   changeDate(dayDiff) {
