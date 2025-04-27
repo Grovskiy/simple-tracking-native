@@ -378,8 +378,8 @@ class SettingsPage extends HTMLElement {
 
   renderProductItem(product) {
     return `
-      <div class="flex justify-between items-center p-3 bg-gray-100 dark:bg-gray-700 rounded-md product-item" data-id="${product.id}">
-        <div class="flex-1 min-w-0">
+      <div class="flex justify-between items-center px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-md product-item" data-id="${product.id}">
+        <div class="flex-1 min-w-0 flex items-center gap-2">
           <div class="font-medium whitespace-nowrap overflow-hidden text-ellipsis">${product.name}</div>
           <div class="text-xs text-gray-500 dark:text-gray-400">${product.caloriesPer100g} ккал/100г</div>
         </div>

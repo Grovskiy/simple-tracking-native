@@ -4,27 +4,17 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Відстеження Калорій</title>
-    <link rel="manifest" href="manifest.json" />
+    <link rel="manifest" href="/manifest.json" />
     <link rel="stylesheet" href="./src/main.css" />
+    <meta name="theme-color" content="#4f46e5" />
   </head>
   <body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
     <app-root></app-root>
 
     <script type="module" src="components/app-root.js"></script>
-    <script>
-      // Реєстрація Service Worker
-      if ("serviceWorker" in navigator) {
-        window.addEventListener("load", () => {
-          navigator.serviceWorker
-            .register("sw.js")
-            .then((reg) => {
-              console.log("Service worker registered", reg);
-            })
-            .catch((err) => {
-              console.error("Service worker registration failed", err);
-            });
-        });
-      }
+    <script type="module">
+      import { setupPWA } from "./src/pwa.js";
+      setupPWA();
     </script>
   </body>
 </html>

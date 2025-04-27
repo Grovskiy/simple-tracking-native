@@ -149,7 +149,6 @@ CREATE POLICY "Users can delete their own goals"
 calorie-tracker-vanilla/
 ├── index.html               # Головна HTML сторінка
 ├── manifest.json            # PWA маніфест
-├── sw.js                    # Service Worker
 ├── assets/                  # Статичні файли
 │   └── css/                 # Компільовані CSS
 │       └── styles.css

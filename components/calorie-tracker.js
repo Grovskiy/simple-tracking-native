@@ -265,8 +265,8 @@ class CalorieTracker extends HTMLElement {
       : 0;
 
     return `
-      <div class="flex justify-between items-center py-3 px-3 mb-2 bg-gray-100 dark:bg-gray-700 rounded-md entry-item" data-id="${entry.id}">
-        <div class="flex-1 min-w-0">
+      <div class="flex justify-between items-center px-2 py-1 mb-2 bg-gray-100 dark:bg-gray-700 rounded-md entry-item" data-id="${entry.id}">
+        <div class="flex-1 min-w-0 flex items-center gap-2">
           <div class="font-medium whitespace-nowrap overflow-hidden text-ellipsis">${entry.productName}</div>
           <div class="text-xs text-gray-500 dark:text-gray-400">${entry.grams}г</div>
         </div>
