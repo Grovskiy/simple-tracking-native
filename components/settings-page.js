@@ -182,7 +182,7 @@ class SettingsPage extends HTMLElement {
         if (this.productToDelete) {
           try {
             await deleteProduct(this.productToDelete.id);
-            this.products = this.products.filter(p => p.id !== this.productToDelete.id);
+            this.loadData()
           } catch (error) {
             console.error('Error deleting product:', error);
           } finally {
